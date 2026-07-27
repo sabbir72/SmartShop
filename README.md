@@ -47,7 +47,7 @@ SMTP_HOST="smtp-relay.brevo.com"
 SMTP_PORT="587"
 SMTP_USER="your-brevo-smtp-username"
 SMTP_PASS="your-brevo-smtp-password"
-EMAIL_FROM="orders@smartecommerce.com"
+EMAIL_FROM="sabbircse72@gmail.com"
 ```
 
 ### 4. Payment Gateways (bKash, SSLCommerz, Nagad)

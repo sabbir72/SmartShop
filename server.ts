@@ -385,7 +385,7 @@ Return STRICT JSON format with these exact keys:
       const { toEmail, subject, htmlContent } = req.body;
       const sendgridKey = process.env.SENDGRID_API_KEY;
       const brevoKey = process.env.BREVO_API_KEY || process.env.SMTP_PASS; // Brevo SMTP Key or API Key
-      const fromEmail = process.env.EMAIL_FROM || "orders@smartecommerce.com";
+      const fromEmail = process.env.EMAIL_FROM || "sabbircse72@gmail.com";
       const smtpHost = process.env.SMTP_HOST || "smtp-relay.brevo.com";
 
       // 1. Try Brevo HTTP API (Works with Brevo SMTP API Key)
