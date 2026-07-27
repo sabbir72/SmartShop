@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 import { getPrismaClient } from "./src/lib/prisma";
 
 dotenv.config();
@@ -379,27 +380,65 @@ Return STRICT JSON format with these exact keys:
     }
   });
 
-  // Email Dispatch API (Brevo / SendGrid / Custom SMTP / Fallback)
+  // Email Dispatch API (Nodemailer SMTP / Brevo / SendGrid / Fallback)
   app.post("/api/notifications/email", async (req, res) => {
     try {
       const { toEmail, subject, htmlContent } = req.body;
       const sendgridKey = process.env.SENDGRID_API_KEY;
-      const brevoKey = process.env.BREVO_API_KEY || process.env.SMTP_PASS; // Brevo SMTP Key or API Key
-      const fromEmail = process.env.EMAIL_FROM || "sabbircse72@gmail.com";
+      const brevoApiKey = process.env.BREVO_API_KEY;
       const smtpHost = process.env.SMTP_HOST || "smtp-relay.brevo.com";
+      const smtpPort = parseInt(process.env.SMTP_PORT || "587", 10);
+      const smtpUser = process.env.SMTP_USER;
+      const smtpPass = process.env.SMTP_PASS;
+      const fromEmail = process.env.EMAIL_FROM || "sabbircse72@gmail.com";
 
-      // 1. Try Brevo HTTP API (Works with Brevo SMTP API Key)
-      if (brevoKey) {
+      // 1. Try Nodemailer SMTP Transporter if SMTP credentials are fully provided
+      if (smtpHost && smtpUser && smtpPass) {
+        try {
+          const transporter = nodemailer.createTransport({
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465,
+            auth: {
+              user: smtpUser,
+              pass: smtpPass,
+            },
+            tls: {
+              rejectUnauthorized: false,
+            },
+          });
+
+          const mailInfo = await transporter.sendMail({
+            from: `"SmartShop Security" <${fromEmail}>`,
+            to: toEmail,
+            subject: subject,
+            html: htmlContent,
+          });
+
+          console.log(`[SMTP LIVE EMAIL DISPATCHED] ID: ${mailInfo.messageId} | Recipient: ${toEmail}`);
+          return res.json({
+            status: "sent",
+            provider: "SMTP",
+            messageId: mailInfo.messageId,
+            recipient: toEmail,
+          });
+        } catch (smtpErr: any) {
+          console.warn("[SMTP Dispatch Warning] Falling back to HTTP API:", smtpErr.message || smtpErr);
+        }
+      }
+
+      // 2. Try Brevo HTTP REST API if BREVO_API_KEY is available
+      if (brevoApiKey) {
         try {
           const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
             method: "POST",
             headers: {
               "Accept": "application/json",
               "Content-Type": "application/json",
-              "api-key": brevoKey,
+              "api-key": brevoApiKey,
             },
             body: JSON.stringify({
-              sender: { email: fromEmail, name: "Smart E-Commerce" },
+              sender: { email: fromEmail, name: "SmartShop" },
               to: [{ email: toEmail }],
               subject: subject,
               htmlContent: htmlContent,
@@ -408,14 +447,15 @@ Return STRICT JSON format with these exact keys:
 
           if (resp.ok) {
             const data = await resp.json();
-            return res.json({ status: "sent", provider: "Brevo SMTP/API", messageId: data.messageId, recipient: toEmail });
+            console.log(`[BREVO API LIVE EMAIL DISPATCHED] ID: ${data.messageId} | Recipient: ${toEmail}`);
+            return res.json({ status: "sent", provider: "Brevo API", messageId: data.messageId, recipient: toEmail });
           }
         } catch (e) {
-          console.warn("Brevo API Dispatch attempt failed, trying fallback:", e);
+          console.warn("Brevo API Dispatch attempt failed:", e);
         }
       }
 
-      // 2. Try SendGrid API
+      // 3. Try SendGrid API
       if (sendgridKey) {
         const resp = await fetch("https://api.sendgrid.com/v3/mail/send", {
           method: "POST",
@@ -425,7 +465,7 @@ Return STRICT JSON format with these exact keys:
           },
           body: JSON.stringify({
             personalizations: [{ to: [{ email: toEmail }] }],
-            from: { email: fromEmail, name: "Smart E-Commerce" },
+            from: { email: fromEmail, name: "SmartShop" },
             subject: subject,
             content: [{ type: "text/html", value: htmlContent }],
           }),
@@ -436,14 +476,14 @@ Return STRICT JSON format with these exact keys:
         }
       }
 
-      // 3. Fallback / Simulation Log
+      // 4. Fallback / Simulation Log
       console.log(`[EMAIL DISPATCH LOG] To: ${toEmail} | Subject: ${subject} | SMTP Host: ${smtpHost}`);
       res.json({
         status: "simulated_sent",
         recipient: toEmail,
         subject,
         smtpHost,
-        info: "Email invoice processed. Set BREVO_API_KEY, SENDGRID_API_KEY, or active SMTP in .env for live transmission.",
+        info: "Email OTP processed. Configure active SMTP or BREVO_API_KEY in .env for live transmission.",
       });
     } catch (err: any) {
       console.error("Email Dispatch Error:", err);
