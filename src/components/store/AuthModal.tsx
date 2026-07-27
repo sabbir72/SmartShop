@@ -575,11 +575,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         placeholder="6-Digit OTP"
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-mono text-center text-lg font-black tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
-                      {activeGeneratedOtp && (
-                        <p className="text-[10px] text-indigo-600 font-mono font-bold mt-1 text-center bg-indigo-50 py-1 rounded-lg border border-indigo-200">
-                          Demo Generated OTP Code: <span className="text-emerald-700 font-extrabold">{activeGeneratedOtp}</span>
-                        </p>
-                      )}
                     </div>
                   )}
                 </div>
@@ -784,11 +779,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   <p className="text-[11px] text-indigo-700">
                     A 6-digit OTP code was sent to {otpChannel === "email" ? regEmail : regMobile} via {otpChannel === "email" ? "Email" : "SMS"}.
                   </p>
-                  {activeGeneratedOtp && (
-                    <div className="mt-2 p-1.5 bg-white rounded-lg border border-indigo-300 font-mono font-extrabold text-indigo-900 text-sm inline-block">
-                      Demo Code: <span className="text-emerald-600">{activeGeneratedOtp}</span>
-                    </div>
-                  )}
                 </div>
 
                 <div>
@@ -949,11 +939,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   <Key className="w-8 h-8 text-indigo-600 mx-auto" />
                   <p className="font-bold">Verify Security Reset OTP</p>
                   <p className="text-[11px] text-indigo-700">Enter the 6-digit OTP sent to {forgotTarget}.</p>
-                  {activeGeneratedOtp && (
-                    <div className="mt-2 p-1.5 bg-white rounded-lg border border-indigo-300 font-mono font-extrabold text-indigo-900 text-sm inline-block">
-                      Demo Reset OTP: <span className="text-emerald-600">{activeGeneratedOtp}</span>
-                    </div>
-                  )}
                 </div>
 
                 <div>

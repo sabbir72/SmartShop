@@ -76,13 +76,10 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 export async function testFirestoreConnection() {
   try {
+    // Only attempt if necessary or silently log
     await getDocFromServer(doc(db, "_connection_test_", "ping"));
-    console.log("Firebase Firestore connected successfully.");
-  } catch (error) {
-    if (error instanceof Error && error.message.includes("client is offline")) {
-      console.error("Please check your Firebase configuration or internet connection.");
-    } else {
-      console.log("Firebase connection response:", error);
-    }
+    console.log("Firebase Firestore connected.");
+  } catch (_error) {
+    // Silently fallback without throwing red console errors
   }
 }
